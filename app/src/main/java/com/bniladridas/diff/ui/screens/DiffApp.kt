@@ -3061,7 +3061,7 @@ private fun AccountDialog(
         Surface(
             shape = RoundedCornerShape(10.dp),
             color = MaterialTheme.colorScheme.background,
-            border = BorderStroke(1.dp, DiffLine),
+            border = BorderStroke(1.dp, appOutline()),
         ) {
             Column(
                 modifier = Modifier
@@ -3075,13 +3075,13 @@ private fun AccountDialog(
                     Column(Modifier.weight(1f)) {
                         Text(
                             "Account",
-                            color = Color.White,
+                            color = appStrong(),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
                             login?.let { "Connected as $it" } ?: "Use a GitHub token for authenticated reads.",
-                            color = TextMuted,
+                            color = appMuted(),
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -3094,26 +3094,18 @@ private fun AccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BrandOrange.copy(alpha = 0.44f),
-                        unfocusedBorderColor = DiffLine,
-                        focusedLabelColor = BrandOrange,
-                        unfocusedLabelColor = TextMuted,
-                        cursorColor = BrandOrange,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
+                    colors = accountTextFieldColors(),
                 )
                 Text(
                     "Fine-grained tokens should include repository read and write access for review, branch, and file edit actions.",
-                    color = TextMuted,
+                    color = appMuted(),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 status?.let {
                     Text(
                         it,
-                        color = if (login != null) BrandOrange else TextMuted,
+                        color = if (login != null) BrandOrange else appMuted(),
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
@@ -3147,16 +3139,8 @@ private fun AccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BrandOrange.copy(alpha = 0.44f),
-                        unfocusedBorderColor = DiffLine,
-                        focusedLabelColor = BrandOrange,
-                        unfocusedLabelColor = TextMuted,
-                        cursorColor = BrandOrange,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
+                    colors = accountTextFieldColors(),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     FilterButton(
@@ -3176,7 +3160,7 @@ private fun AccountDialog(
                 SectionTitle("Supabase Sync")
                 Text(
                     "Matches the web user_preferences row for default repo, recent repos, and saved pulls. Add diff://auth/callback to Supabase redirect URLs.",
-                    color = TextMuted,
+                    color = appMuted(),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 OutlinedTextField(
@@ -3186,7 +3170,7 @@ private fun AccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
                     colors = accountTextFieldColors(),
                 )
                 OutlinedTextField(
@@ -3196,7 +3180,7 @@ private fun AccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
                     colors = accountTextFieldColors(),
                 )
                 OutlinedTextField(
@@ -3206,7 +3190,7 @@ private fun AccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
                     colors = accountTextFieldColors(),
                 )
                 OutlinedTextField(
@@ -3215,7 +3199,7 @@ private fun AccountDialog(
                     label = { Text("Supabase access token") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
                     colors = accountTextFieldColors(),
                 )
                 OutlinedTextField(
@@ -3224,7 +3208,7 @@ private fun AccountDialog(
                     label = { Text("Supabase refresh token") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = appStrong()),
                     colors = accountTextFieldColors(),
                 )
                 val canSync = draftSupabaseUrl.isNotBlank() &&
@@ -3297,7 +3281,7 @@ private fun AccountDialog(
                             is LoadState.Failed -> syncState.message
                             else -> if (supabaseConfig.isComplete) "Sync ready" else "Sync not configured"
                         },
-                        color = TextMuted,
+                        color = appMuted(),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.weight(1f),
                     )
@@ -3310,7 +3294,7 @@ private fun AccountDialog(
                     )
                     Text(
                         "Keeps token, clears saved pulls and repo history",
-                        color = TextMuted,
+                        color = appMuted(),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.weight(1f),
                     )

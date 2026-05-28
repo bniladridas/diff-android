@@ -48,6 +48,7 @@ import com.bniladridas.diff.model.RepoTreeItem
 import com.bniladridas.diff.model.TimelineEvent
 import com.bniladridas.diff.model.WorkspaceTab
 import com.bniladridas.diff.ui.formatDate
+import com.bniladridas.diff.ui.markdownBodyPreview
 import com.bniladridas.diff.ui.shortSha
 import com.bniladridas.diff.ui.theme.BrandOrange
 import com.bniladridas.diff.ui.theme.BrandOrangeSoft
@@ -456,7 +457,7 @@ fun CommentCard(
                 )
             }
             Text(
-                comment.body.ifBlank { "No comment body." },
+                markdownBodyPreview(comment.body, "No comment body."),
                 color = bodyText(),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 10,
@@ -513,7 +514,7 @@ fun ReviewCard(review: PullReview) {
                 Text(review.author, color = strongText(), fontWeight = FontWeight.SemiBold)
                 Text(formatDate(review.submittedAt), color = mutedText(), style = MaterialTheme.typography.labelSmall)
                 if (review.body.isNotBlank()) {
-                    Text(review.body, color = bodyText(), maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    Text(markdownBodyPreview(review.body, ""), color = bodyText(), maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
             }
             Tag(review.state.lowercase(), reviewStateColor(review.state), reviewStateFill(review.state))
@@ -575,7 +576,7 @@ fun TimelineEventCard(event: TimelineEvent) {
                 )
                 event.body?.let { body ->
                     Text(
-                        body,
+                        markdownBodyPreview(body, ""),
                         color = bodyText(),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 4,
