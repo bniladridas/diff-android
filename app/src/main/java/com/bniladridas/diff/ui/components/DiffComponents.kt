@@ -1,6 +1,7 @@
 package com.bniladridas.diff.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,7 @@ import com.bniladridas.diff.model.TimelineEvent
 import com.bniladridas.diff.model.WorkspaceTab
 import com.bniladridas.diff.ui.formatDate
 import com.bniladridas.diff.ui.markdownBodyPreview
+import com.bniladridas.diff.ui.replaceBareUrls
 import com.bniladridas.diff.ui.shortSha
 import com.bniladridas.diff.ui.theme.BrandOrange
 import com.bniladridas.diff.ui.theme.BrandOrangeSoft
@@ -222,20 +224,19 @@ private fun markdownBlocks(
 
 @Composable
 fun BrandMark() {
+    val signRes = if (isSystemInDarkTheme()) {
+        R.drawable.app_icon_foreground
+    } else {
+        R.drawable.diff_sign
+    }
+
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(Color(0xFF111418), RoundedCornerShape(5.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_diff_mark),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(18.dp),
-            )
-        }
+        Icon(
+            painter = painterResource(signRes),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(24.dp),
+        )
         Spacer(Modifier.width(7.dp))
         Text(
             "DIFF",
@@ -774,7 +775,7 @@ fun CheckCard(
             }
             log?.let { rawLog ->
                 Text(
-                    rawLog,
+                    cleanCheckOutput(rawLog),
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(codeSurface())
@@ -1231,6 +1232,7 @@ private fun cleanCheckOutput(value: String): String =
         .replace("&lt;", "<")
         .replace("&gt;", ">")
         .replace("&amp;", "&")
+        .replaceBareUrls()
         .lineSequence()
         .map { it.trim() }
         .filter { it.isNotBlank() }
