@@ -28,6 +28,16 @@ class MarkdownPreviewTest {
     }
 
     @Test
+    fun `shortens bare urls in log style output`() {
+        val body = "Downloaded from https://objects.githubusercontent.com/github-production-release-asset/example"
+
+        assertEquals(
+            "Downloaded from objects.githubusercontent.com",
+            body.replaceBareUrls(),
+        )
+    }
+
+    @Test
     fun `hides html image badges behind alt labels`() {
         val body = """<img src="https://img.shields.io/badge/status-ready-green" alt="Status badge">"""
 

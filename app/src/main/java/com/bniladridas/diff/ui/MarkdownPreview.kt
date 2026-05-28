@@ -27,9 +27,7 @@ internal fun markdownBodyPreview(
         .replace(markdownLinkPattern) { match ->
             match.groups[1]?.value?.trim().orEmpty()
         }
-        .replace(bareUrlPattern) { match ->
-            match.value.displayUrl()
-        }
+        .replaceBareUrls()
         .lines()
         .map { it.trim() }
         .filter { it.isNotBlank() }
@@ -50,6 +48,11 @@ private fun String.cleanBadgeLabel(): String? {
 
     return cleaned
 }
+
+internal fun String.replaceBareUrls(): String =
+    replace(bareUrlPattern) { match ->
+        match.value.displayUrl()
+    }
 
 private fun String.displayUrl(): String {
     val withoutScheme = removePrefix("https://").removePrefix("http://")
