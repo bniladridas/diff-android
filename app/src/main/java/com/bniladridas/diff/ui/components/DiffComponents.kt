@@ -114,7 +114,7 @@ private fun NeutralTag(text: String) {
 fun BrandMark() {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Image(
-            painter = painterResource(R.drawable.coccinella_logo),
+            painter = painterResource(R.drawable.app_icon_foreground),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
