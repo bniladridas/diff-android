@@ -5,6 +5,7 @@ private val markdownLinkPattern = Regex("""\[([^\]]+)]\(https?://[^)]+\)""")
 private val htmlImagePattern = Regex("""<img\b[^>]*>""", RegexOption.IGNORE_CASE)
 private val htmlAltPattern = Regex("""\balt=["']([^"']*)["']""", RegexOption.IGNORE_CASE)
 private val bareUrlPattern = Regex("""https?://[^\s)>\]]+""")
+private val inlineCodePattern = Regex("""`([^`\n]+)`""")
 
 internal fun markdownBodyPreview(
     rawBody: String,
@@ -13,6 +14,10 @@ internal fun markdownBodyPreview(
     if (rawBody.isBlank()) return emptyText
 
     return rawBody
+        .withoutCodeFences()
+        .replace(inlineCodePattern) { match ->
+            match.groups[1]?.value.orEmpty()
+        }
         .replace(htmlImagePattern) { match ->
             htmlAltPattern.find(match.value)?.groups?.get(1)?.value?.cleanBadgeLabel()?.let { "badge: $it" }.orEmpty()
         }
@@ -31,6 +36,11 @@ internal fun markdownBodyPreview(
         .joinToString("\n")
         .ifBlank { emptyText }
 }
+
+private fun String.withoutCodeFences(): String =
+    lines()
+        .filterNot { it.trim().startsWith("```") }
+        .joinToString("\n")
 
 private fun String.cleanBadgeLabel(): String? {
     val cleaned = trim()

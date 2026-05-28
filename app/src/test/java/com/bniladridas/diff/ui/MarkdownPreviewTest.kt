@@ -38,6 +38,31 @@ class MarkdownPreviewTest {
     }
 
     @Test
+    fun `preserves inline code without backtick markers`() {
+        val body = "Run `./gradlew test` before merging."
+
+        assertEquals(
+            "Run ./gradlew test before merging.",
+            markdownBodyPreview(body, "empty"),
+        )
+    }
+
+    @Test
+    fun `preserves fenced code content without fence markers`() {
+        val body = """
+            Output:
+            ```text
+            BUILD SUCCESSFUL
+            ```
+        """.trimIndent()
+
+        assertEquals(
+            "Output:\nBUILD SUCCESSFUL",
+            markdownBodyPreview(body, "empty"),
+        )
+    }
+
+    @Test
     fun `keeps blank previews calm`() {
         assertEquals("No comment body.", markdownBodyPreview("   ", "No comment body."))
     }
