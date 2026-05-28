@@ -1,6 +1,7 @@
 package com.bniladridas.diff.data
 
 import android.content.Context
+import androidx.core.content.edit
 import com.bniladridas.diff.model.AiDraft
 import com.bniladridas.diff.model.RepoRef
 import com.bniladridas.diff.model.SavedPull
@@ -31,10 +32,10 @@ class LocalPreferences(context: Context) {
     }
 
     fun saveDefaultRepo(repo: RepoRef) {
-        preferences.edit()
-            .putString(DefaultOwnerKey, repo.owner)
-            .putString(DefaultRepoKey, repo.repo)
-            .apply()
+        preferences.edit {
+            putString(DefaultOwnerKey, repo.owner)
+            putString(DefaultRepoKey, repo.repo)
+        }
     }
 
     fun loadRecentRepos(): List<RepoRef> {
@@ -52,9 +53,9 @@ class LocalPreferences(context: Context) {
     }
 
     fun saveRecentRepos(repos: List<RepoRef>) {
-        preferences.edit()
-            .putString(RecentReposKey, repos.take(MaxRecentRepos).repoRefsToJson())
-            .apply()
+        preferences.edit {
+            putString(RecentReposKey, repos.take(MaxRecentRepos).repoRefsToJson())
+        }
     }
 
     fun loadSavedPulls(): List<SavedPull> {
@@ -78,9 +79,9 @@ class LocalPreferences(context: Context) {
     }
 
     fun saveSavedPulls(pulls: List<SavedPull>) {
-        preferences.edit()
-            .putString(SavedPullsKey, pulls.take(MaxSavedPulls).savedPullsToJson())
-            .apply()
+        preferences.edit {
+            putString(SavedPullsKey, pulls.take(MaxSavedPulls).savedPullsToJson())
+        }
     }
 
     fun loadAiDrafts(): List<AiDraft> {
@@ -95,9 +96,9 @@ class LocalPreferences(context: Context) {
     }
 
     fun saveAiDrafts(drafts: List<AiDraft>) {
-        preferences.edit()
-            .putString(AiDraftsKey, drafts.take(MaxAiDrafts).aiDraftsToJson())
-            .apply()
+        preferences.edit {
+            putString(AiDraftsKey, drafts.take(MaxAiDrafts).aiDraftsToJson())
+        }
     }
 
     fun loadGitHubToken(): String {
@@ -123,26 +124,24 @@ class LocalPreferences(context: Context) {
             return
         }
         val encrypted = secureTokenStore.encrypt(cleanToken)
-        preferences.edit()
-            .remove(GitHubTokenKey)
-            .apply {
-                if (encrypted != null) {
-                    putString(EncryptedGitHubTokenKey, encrypted)
-                    putBoolean(GitHubTokenFromSupabaseKey, fromSupabase)
-                } else {
-                    remove(EncryptedGitHubTokenKey)
-                    remove(GitHubTokenFromSupabaseKey)
-                }
+        preferences.edit {
+            remove(GitHubTokenKey)
+            if (encrypted != null) {
+                putString(EncryptedGitHubTokenKey, encrypted)
+                putBoolean(GitHubTokenFromSupabaseKey, fromSupabase)
+            } else {
+                remove(EncryptedGitHubTokenKey)
+                remove(GitHubTokenFromSupabaseKey)
             }
-            .apply()
+        }
     }
 
     fun clearGitHubToken() {
-        preferences.edit()
-            .remove(GitHubTokenKey)
-            .remove(EncryptedGitHubTokenKey)
-            .remove(GitHubTokenFromSupabaseKey)
-            .apply()
+        preferences.edit {
+            remove(GitHubTokenKey)
+            remove(EncryptedGitHubTokenKey)
+            remove(GitHubTokenFromSupabaseKey)
+        }
     }
 
     fun loadGeminiApiKey(): String =
@@ -157,21 +156,19 @@ class LocalPreferences(context: Context) {
             return
         }
         val encrypted = secureTokenStore.encrypt(cleanKey)
-        preferences.edit()
-            .apply {
-                if (encrypted != null) {
-                    putString(EncryptedGeminiApiKeyKey, encrypted)
-                } else {
-                    remove(EncryptedGeminiApiKeyKey)
-                }
+        preferences.edit {
+            if (encrypted != null) {
+                putString(EncryptedGeminiApiKeyKey, encrypted)
+            } else {
+                remove(EncryptedGeminiApiKeyKey)
             }
-            .apply()
+        }
     }
 
     fun clearGeminiApiKey() {
-        preferences.edit()
-            .remove(EncryptedGeminiApiKeyKey)
-            .apply()
+        preferences.edit {
+            remove(EncryptedGeminiApiKeyKey)
+        }
     }
 
     fun loadSupabaseConfig(): SupabaseConfig =
@@ -193,15 +190,15 @@ class LocalPreferences(context: Context) {
         preferences.getString(SupabaseAuthVerifierKey, null).orEmpty()
 
     fun saveSupabaseAuthVerifier(verifier: String) {
-        preferences.edit()
-            .putString(SupabaseAuthVerifierKey, verifier)
-            .apply()
+        preferences.edit {
+            putString(SupabaseAuthVerifierKey, verifier)
+        }
     }
 
     fun clearSupabaseAuthVerifier() {
-        preferences.edit()
-            .remove(SupabaseAuthVerifierKey)
-            .apply()
+        preferences.edit {
+            remove(SupabaseAuthVerifierKey)
+        }
     }
 
     fun saveSupabaseConfig(config: SupabaseConfig) {
@@ -211,48 +208,46 @@ class LocalPreferences(context: Context) {
         val encryptedAnonKey = cleanAnonKey.takeIf { it.isNotBlank() }?.let(secureTokenStore::encrypt)
         val encryptedAccessToken = cleanAccessToken.takeIf { it.isNotBlank() }?.let(secureTokenStore::encrypt)
         val encryptedRefreshToken = cleanRefreshToken.takeIf { it.isNotBlank() }?.let(secureTokenStore::encrypt)
-        preferences.edit()
-            .putString(SupabaseUrlKey, config.url.trim().trimEnd('/'))
-            .putString(SupabaseUserIdKey, config.userId.trim())
-            .apply {
-                if (encryptedAnonKey != null) {
-                    putString(EncryptedSupabaseAnonKeyKey, encryptedAnonKey)
-                } else {
-                    remove(EncryptedSupabaseAnonKeyKey)
-                }
-                if (encryptedAccessToken != null) {
-                    putString(EncryptedSupabaseAccessTokenKey, encryptedAccessToken)
-                } else {
-                    remove(EncryptedSupabaseAccessTokenKey)
-                }
-                if (encryptedRefreshToken != null) {
-                    putString(EncryptedSupabaseRefreshTokenKey, encryptedRefreshToken)
-                } else {
-                    remove(EncryptedSupabaseRefreshTokenKey)
-                }
+        preferences.edit {
+            putString(SupabaseUrlKey, config.url.trim().trimEnd('/'))
+            putString(SupabaseUserIdKey, config.userId.trim())
+            if (encryptedAnonKey != null) {
+                putString(EncryptedSupabaseAnonKeyKey, encryptedAnonKey)
+            } else {
+                remove(EncryptedSupabaseAnonKeyKey)
             }
-            .apply()
+            if (encryptedAccessToken != null) {
+                putString(EncryptedSupabaseAccessTokenKey, encryptedAccessToken)
+            } else {
+                remove(EncryptedSupabaseAccessTokenKey)
+            }
+            if (encryptedRefreshToken != null) {
+                putString(EncryptedSupabaseRefreshTokenKey, encryptedRefreshToken)
+            } else {
+                remove(EncryptedSupabaseRefreshTokenKey)
+            }
+        }
     }
 
     fun clearSupabaseConfig() {
-        preferences.edit()
-            .remove(SupabaseUrlKey)
-            .remove(SupabaseUserIdKey)
-            .remove(EncryptedSupabaseAnonKeyKey)
-            .remove(EncryptedSupabaseAccessTokenKey)
-            .remove(EncryptedSupabaseRefreshTokenKey)
-            .remove(SupabaseAuthVerifierKey)
-            .apply()
+        preferences.edit {
+            remove(SupabaseUrlKey)
+            remove(SupabaseUserIdKey)
+            remove(EncryptedSupabaseAnonKeyKey)
+            remove(EncryptedSupabaseAccessTokenKey)
+            remove(EncryptedSupabaseRefreshTokenKey)
+            remove(SupabaseAuthVerifierKey)
+        }
     }
 
     fun clearSavedAppState() {
-        preferences.edit()
-            .remove(DefaultOwnerKey)
-            .remove(DefaultRepoKey)
-            .remove(RecentReposKey)
-            .remove(SavedPullsKey)
-            .remove(AiDraftsKey)
-            .apply()
+        preferences.edit {
+            remove(DefaultOwnerKey)
+            remove(DefaultRepoKey)
+            remove(RecentReposKey)
+            remove(SavedPullsKey)
+            remove(AiDraftsKey)
+        }
     }
 
     private fun List<RepoRef>.repoRefsToJson(): String {

@@ -36,6 +36,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -196,7 +198,7 @@ fun DiffApp(
     var highlightedDiffSide by remember { mutableStateOf<String?>(null) }
     var highlightedDiffStartSide by remember { mutableStateOf<String?>(null) }
     var pane by remember { mutableStateOf(MobilePane.Pulls) }
-    var lastRootBackAt by remember { mutableStateOf(0L) }
+    var lastRootBackAt by remember { mutableLongStateOf(0L) }
     var listState by remember { mutableStateOf<LoadState>(LoadState.Idle) }
     var branchesState by remember { mutableStateOf<LoadState>(LoadState.Idle) }
     var repoTreeState by remember { mutableStateOf<LoadState>(LoadState.Idle) }
@@ -224,15 +226,15 @@ fun DiffApp(
     var pullBody by remember { mutableStateOf("") }
     var pullBaseBranch by remember { mutableStateOf("main") }
     var pullWriteState by remember { mutableStateOf<LoadState>(LoadState.Idle) }
-    var listRequestId by remember { mutableStateOf(0) }
-    var branchesRequestId by remember { mutableStateOf(0) }
-    var repoTreeRequestId by remember { mutableStateOf(0) }
-    var repoFileRequestId by remember { mutableStateOf(0) }
-    var detailRequestId by remember { mutableStateOf(0) }
+    var listRequestId by remember { mutableIntStateOf(0) }
+    var branchesRequestId by remember { mutableIntStateOf(0) }
+    var repoTreeRequestId by remember { mutableIntStateOf(0) }
+    var repoFileRequestId by remember { mutableIntStateOf(0) }
+    var detailRequestId by remember { mutableIntStateOf(0) }
     var loadedRepoKey by remember { mutableStateOf("") }
     var showAccount by remember { mutableStateOf(false) }
     var pendingSavedPullNumber by remember { mutableStateOf<Int?>(null) }
-    var repoSwitchRequest by remember { mutableStateOf(0) }
+    var repoSwitchRequest by remember { mutableIntStateOf(0) }
 
     suspend fun refreshSupabaseConfigIfNeeded(config: SupabaseConfig): SupabaseConfig {
         if (!config.canRefresh) return config
