@@ -2,21 +2,15 @@
 
 # DIFF Android
 
-DIFF Android is the mobile app for DIFF, a small pull request workspace for GitHub. It follows the DIFF web app so pull requests, files, discussion, checks, history, branches, and repository code feel like one product across web and Android.
+DIFF Android is the mobile app for DIFF, a small pull request workspace for GitHub.
 
-The web app is the behavior and design reference:
+It mirrors the DIFF web experience across pull requests, files, discussions, checks, branches, and repository history so work can move naturally between desktop and mobile.
 
-- https://github.com/bniladridas/diff
-
-## Features
-
-- Browse pull requests, branches, changed files, and repository files.
-- Read discussion, review comments, checks, commits, and timeline history.
-- Save pull requests locally and sync preferences with Supabase when configured.
-- Use a GitHub token for write actions such as comments, reviews, file edits, branches, pull requests, PR metadata, merge actions, and branch cleanup.
-- Use an optional Gemini API key for Draft Fix generation from review comments.
+The app focuses on reading and reviewing comfortably on a phone while still supporting authenticated repository actions when a GitHub token is configured. Local preferences can optionally sync through Supabase, and Draft Fix generation can use Gemini when an API key is provided.
 
 ## Build
+
+Build the debug app with:
 
 ```bash
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
@@ -36,6 +30,6 @@ adb install -r app/build/outputs/apk/debug/diff-debug.apk
 
 ## Credentials
 
-DIFF Android stores entered GitHub, Gemini, and Supabase credentials locally on the device. Do not commit real tokens, API keys, access tokens, or refresh tokens.
+Entered GitHub, Gemini, and Supabase credentials remain stored locally on the device. Do not commit real tokens or API keys.
 
-DIFF is not an official GitHub product or an official product of any repository owner whose data it reads.
+DIFF is an independent project and is not affiliated with GitHub.
