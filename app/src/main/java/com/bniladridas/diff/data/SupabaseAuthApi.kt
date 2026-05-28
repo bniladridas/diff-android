@@ -1,6 +1,7 @@
 package com.bniladridas.diff.data
 
 import android.net.Uri
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -28,7 +29,7 @@ object SupabaseAuthApi {
         require(config.anonKey.isNotBlank()) { "Add a Supabase anon key before signing in." }
         val verifier = createCodeVerifier()
         val challenge = codeChallenge(verifier)
-        val uri = Uri.parse(config.url.trim().trimEnd('/'))
+        val uri = config.url.trim().trimEnd('/').toUri()
             .buildUpon()
             .appendEncodedPath("auth/v1/authorize")
             .appendQueryParameter("provider", "github")

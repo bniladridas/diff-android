@@ -6,15 +6,13 @@ plugins {
 android {
     namespace = "com.bniladridas.diff"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
         applicationId = "com.bniladridas.diff"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "0.7.4"
 

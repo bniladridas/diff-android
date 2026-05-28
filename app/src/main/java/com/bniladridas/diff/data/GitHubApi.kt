@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
+import java.net.URLEncoder
 import java.net.URL
 import java.util.Base64
 
@@ -86,8 +87,8 @@ object GitHubApi {
                     checks = emptyList(),
                 )
             }
-            val encodedBase = base.split("/").joinToString("/") { java.net.URLEncoder.encode(it, Charsets.UTF_8.name()) }
-            val encodedHead = head.split("/").joinToString("/") { java.net.URLEncoder.encode(it, Charsets.UTF_8.name()) }
+            val encodedBase = encodeUrlPathValue(base)
+            val encodedHead = encodeUrlPathValue(head)
             val body = get("https://api.github.com/repos/$owner/$repo/compare/$encodedBase...$encodedHead")
             val compare = JSONObject(body)
             val files = compare.optJSONArray("files") ?: JSONArray()
@@ -105,7 +106,8 @@ object GitHubApi {
 
     suspend fun fetchRepoTree(owner: String, repo: String, ref: String = "HEAD"): Result<List<RepoTreeItem>> =
         runCatching {
-            val body = get("https://api.github.com/repos/$owner/$repo/git/trees/$ref?recursive=1")
+            val encodedRef = encodeUrlPathValue(ref)
+            val body = get("https://api.github.com/repos/$owner/$repo/git/trees/$encodedRef?recursive=1")
             val array = JSONObject(body).optJSONArray("tree") ?: JSONArray()
             List(array.length()) { index ->
                 val item = array.getJSONObject(index)
@@ -122,8 +124,9 @@ object GitHubApi {
 
     suspend fun fetchRepoFile(owner: String, repo: String, path: String, ref: String = "HEAD"): Result<RepoFileContent> =
         runCatching {
-            val encodedPath = path.split("/").joinToString("/") { java.net.URLEncoder.encode(it, Charsets.UTF_8.name()) }
-            val body = get("https://api.github.com/repos/$owner/$repo/contents/$encodedPath?ref=$ref")
+            val encodedPath = encodeUrlPath(path)
+            val encodedRef = encodeUrlQueryValue(ref)
+            val body = get("https://api.github.com/repos/$owner/$repo/contents/$encodedPath?ref=$encodedRef")
             val item = JSONObject(body)
             val encoding = item.optString("encoding")
             val rawContent = item.optString("content")
@@ -151,7 +154,7 @@ object GitHubApi {
             if (authToken.isBlank()) error("Add a GitHub token before committing files.")
             if (message.isBlank()) error("Commit message is required.")
             if (file.sha.isBlank()) error("File sha is required before committing.")
-            val encodedPath = file.path.split("/").joinToString("/") { java.net.URLEncoder.encode(it, Charsets.UTF_8.name()) }
+            val encodedPath = encodeUrlPath(file.path)
             val payload = JSONObject()
                 .put("message", message.trim())
                 .put("content", Base64.getEncoder().encodeToString(content.toByteArray(Charsets.UTF_8)))
@@ -185,7 +188,7 @@ object GitHubApi {
             val cleanPath = path.trim().trim('/')
             if (cleanPath.isBlank()) error("File path is required.")
             if (message.isBlank()) error("Commit message is required.")
-            val encodedPath = cleanPath.split("/").joinToString("/") { java.net.URLEncoder.encode(it, Charsets.UTF_8.name()) }
+            val encodedPath = encodeUrlPath(cleanPath)
             val payload = JSONObject()
                 .put("message", message.trim())
                 .put("content", Base64.getEncoder().encodeToString(content.toByteArray(Charsets.UTF_8)))
@@ -325,9 +328,7 @@ object GitHubApi {
             val cleanBranch = branch.trim()
             if (cleanBranch.isBlank()) error("Branch name is required.")
             if (cleanBranch == "main" || cleanBranch == "master") error("Refusing to delete the default branch name.")
-            val encodedBranch = cleanBranch
-                .split("/")
-                .joinToString("/") { java.net.URLEncoder.encode(it, Charsets.UTF_8.name()) }
+            val encodedBranch = encodeUrlPathValue(cleanBranch)
             request(
                 url = "https://api.github.com/repos/$owner/$repo/git/refs/heads/$encodedBranch",
                 method = "DELETE",
@@ -467,23 +468,38 @@ object GitHubApi {
         if (ref.isBlank()) return emptyList()
         val body = get("https://api.github.com/repos/$owner/$repo/commits/$ref/check-runs?per_page=50")
         val array = JSONObject(body).optJSONArray("check_runs") ?: JSONArray()
-        return List(array.length()) { index ->
+        val checks = List(array.length()) { index ->
             val item = array.getJSONObject(index)
             val id = item.optLong("id")
             val output = item.optJSONObject("output")
-            CheckRun(
-                id = id,
-                jobId = item.optCleanString("details_url")?.let { extractJobId(it) },
-                name = item.optString("name"),
-                status = item.optString("status"),
-                conclusion = item.optString("conclusion").takeIf { it.isNotBlank() && it != "null" },
-                url = item.optString("html_url"),
-                startedAt = item.optCleanString("started_at"),
-                completedAt = item.optCleanString("completed_at"),
-                summary = output?.optCleanString("summary"),
-                text = output?.optCleanString("text"),
-                annotations = emptyList(),
+            val annotationsCount = output?.optInt("annotations_count") ?: 0
+            CheckWithAnnotationCount(
+                check = CheckRun(
+                    id = id,
+                    jobId = item.optCleanString("details_url")?.let { extractJobId(it) },
+                    name = item.optString("name"),
+                    status = item.optString("status"),
+                    conclusion = item.optString("conclusion").takeIf { it.isNotBlank() && it != "null" },
+                    url = item.optString("html_url"),
+                    startedAt = item.optCleanString("started_at"),
+                    completedAt = item.optCleanString("completed_at"),
+                    summary = output?.optCleanString("summary"),
+                    text = output?.optCleanString("text"),
+                    annotations = emptyList(),
+                ),
+                annotationsCount = annotationsCount,
             )
+        }
+        return coroutineScope {
+            checks.map { item ->
+                async {
+                    if (item.annotationsCount <= 0) {
+                        item.check
+                    } else {
+                        item.check.copy(annotations = fetchCheckAnnotations(owner, repo, item.check.id))
+                    }
+                }
+            }.map { it.await() }
         }
     }
 
@@ -684,6 +700,20 @@ object GitHubApi {
         }
     }
 }
+
+private data class CheckWithAnnotationCount(
+    val check: CheckRun,
+    val annotationsCount: Int,
+)
+
+private fun encodeUrlPath(path: String): String =
+    path.split("/").joinToString("/") { encodeUrlPathValue(it) }
+
+private fun encodeUrlPathValue(value: String): String =
+    encodeUrlQueryValue(value).replace("+", "%20")
+
+private fun encodeUrlQueryValue(value: String): String =
+    URLEncoder.encode(value, Charsets.UTF_8.name())
 
 private fun timelineLabel(item: JSONObject): String {
     val event = item.optString("event")
