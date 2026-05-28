@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: LicenseRef-DIFF -->
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/bniladridas/diff-android/main/docs/assets/icon-transparent.png" alt="DIFF Android icon" width="96" height="96">
+</p>
+
 # DIFF Android
 
 DIFF Android is the mobile app for DIFF, a small pull request workspace for GitHub.
