@@ -28,9 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.bniladridas.diff.R
 import com.bniladridas.diff.model.ChangedFile
@@ -63,6 +66,8 @@ import com.bniladridas.diff.ui.theme.DiffRed
 import com.bniladridas.diff.ui.theme.DiffRedSoft
 import com.bniladridas.diff.ui.theme.PanelRaised
 import com.bniladridas.diff.ui.theme.TextMuted
+
+private val inlineCodePattern = Regex("""`([^`\n]+)`""")
 
 @Composable
 fun PanelCard(
@@ -108,6 +113,111 @@ private fun codeText(alpha: Float = 1f): Color = MaterialTheme.colorScheme.onSur
 @Composable
 private fun NeutralTag(text: String) {
     Tag(text, mutedText(0.72f), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
+}
+
+@Composable
+private fun MarkdownBody(
+    rawBody: String,
+    emptyText: String,
+    modifier: Modifier = Modifier,
+) {
+    val blocks = markdownBlocks(rawBody, emptyText)
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        blocks.forEach { block ->
+            if (block.isCode) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp),
+                    color = codeSurface(),
+                    border = BorderStroke(1.dp, outlineText(0.45f)),
+                ) {
+                    Text(
+                        block.text,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        color = codeText(),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            } else {
+                Text(
+                    text = inlineCodeText(block.text),
+                    color = bodyText(),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun inlineCodeText(text: String) = buildAnnotatedString {
+    var cursor = 0
+    inlineCodePattern.findAll(text).forEach { match ->
+        append(text.substring(cursor, match.range.first))
+        withStyle(
+            SpanStyle(
+                color = codeText(),
+                fontFamily = FontFamily.Monospace,
+                background = codeSurface(),
+            ),
+        ) {
+            append(match.groups[1]?.value.orEmpty())
+        }
+        cursor = match.range.last + 1
+    }
+    append(text.substring(cursor))
+}
+
+private data class MarkdownBlock(
+    val text: String,
+    val isCode: Boolean,
+)
+
+private fun markdownBlocks(
+    rawBody: String,
+    emptyText: String,
+): List<MarkdownBlock> {
+    if (rawBody.isBlank()) return listOf(MarkdownBlock(emptyText, isCode = false))
+
+    val blocks = mutableListOf<MarkdownBlock>()
+    val textLines = mutableListOf<String>()
+    val codeLines = mutableListOf<String>()
+    var inCode = false
+
+    fun flushText() {
+        val text = markdownBodyPreview(textLines.joinToString("\n"), "")
+        if (text.isNotBlank()) blocks += MarkdownBlock(text, isCode = false)
+        textLines.clear()
+    }
+
+    fun flushCode() {
+        val text = codeLines.joinToString("\n").trim()
+        if (text.isNotBlank()) blocks += MarkdownBlock(text, isCode = true)
+        codeLines.clear()
+    }
+
+    rawBody.lines().forEach { line ->
+        if (line.trim().startsWith("```")) {
+            if (inCode) {
+                flushCode()
+            } else {
+                flushText()
+            }
+            inCode = !inCode
+        } else if (inCode) {
+            codeLines += line
+        } else {
+            textLines += line
+        }
+    }
+
+    if (inCode) flushCode() else flushText()
+
+    return blocks.ifEmpty { listOf(MarkdownBlock(emptyText, isCode = false)) }
 }
 
 @Composable
@@ -456,13 +566,7 @@ fun CommentCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(
-                markdownBodyPreview(comment.body, "No comment body."),
-                color = bodyText(),
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 10,
-                overflow = TextOverflow.Ellipsis,
-            )
+            MarkdownBody(comment.body, "No comment body.")
             if (comment.path != null && (onJumpToDiff != null || onDraftFix != null)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     onJumpToDiff?.let {
